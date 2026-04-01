@@ -6,7 +6,9 @@ use App\Entity\Player;
 use App\Entity\PlayerTournamentResult;
 use App\Entity\Tournament;
 use App\Limitless\Dto\Tournament as TournamentDto;
+use App\Limitless\Dto\TournamentDetails;
 use App\Limitless\Dto\TournamentStanding;
+use App\Limitless\Exception\RateLimitException;
 use App\Limitless\LimitlessTcgClient;
 use App\Repository\PlayerRepository;
 use App\Repository\PlayerTournamentResultRepository;
@@ -120,10 +122,32 @@ final readonly class PlayerStatsCollector
             return $stats;
         }
 
+        // Check if tournament already exists with organizer details (optimization to avoid unnecessary API calls)
+        $externalId = LimitlessTournamentId::fromString($tournamentDto->id);
+        $existingTournament = $this->tournamentRepository->findByExternalId($externalId);
+        $needsDetails = null === $existingTournament || !$existingTournament->hasOrganizerDetails();
+
+        // Fetch tournament details only if needed (new tournament or missing organizer details)
+        $tournamentDetails = null;
+        if ($needsDetails) {
+            try {
+                $tournamentDetails = $this->client->getTournamentDetails($tournamentDto->id);
+            } catch (RateLimitException $e) {
+                $this->logger?->warning('Rate limit reached, skipping details for tournament {id}', [
+                    'id' => $tournamentDto->id,
+                ]);
+            } catch (\Exception $e) {
+                $this->logger?->warning('Failed to fetch details for tournament {id}: {error}', [
+                    'id' => $tournamentDto->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         // Wrap database operations in a transaction
-        $this->entityManager->wrapInTransaction(function () use ($tournamentDto, $matchingStandings, &$playersCache, &$stats): void {
+        $this->entityManager->wrapInTransaction(function () use ($tournamentDto, $tournamentDetails, $matchingStandings, &$playersCache, &$stats): void {
             // Get or create tournament entity (only if we have matching players)
-            $tournament = $this->getOrCreateTournament($tournamentDto);
+            $tournament = $this->getOrCreateTournament($tournamentDto, $tournamentDetails);
 
             foreach ($matchingStandings as $standing) {
                 ++$stats['players_found'];
@@ -139,7 +163,7 @@ final readonly class PlayerStatsCollector
         return $stats;
     }
 
-    private function getOrCreateTournament(TournamentDto $dto): Tournament
+    private function getOrCreateTournament(TournamentDto $dto, ?TournamentDetails $details = null): Tournament
     {
         $externalId = LimitlessTournamentId::fromString($dto->id);
         $tournament = $this->tournamentRepository->findByExternalId($externalId);
@@ -151,6 +175,11 @@ final readonly class PlayerStatsCollector
                 ->setFormat($dto->format)
                 ->setDate($dto->date)
                 ->setPlayerCount($dto->players);
+
+            // Update with details if available
+            if (null !== $details) {
+                $this->updateTournamentWithDetails($tournament, $details);
+            }
 
             return $tournament;
         }
@@ -165,9 +194,23 @@ final readonly class PlayerStatsCollector
         $tournament->setFormat($dto->format)
             ->setPlayerCount($dto->players);
 
+        // Update with details if available
+        if (null !== $details) {
+            $this->updateTournamentWithDetails($tournament, $details);
+        }
+
         $this->entityManager->persist($tournament);
 
         return $tournament;
+    }
+
+    private function updateTournamentWithDetails(Tournament $tournament, TournamentDetails $details): void
+    {
+        $tournament->setOrganizerId($details->organizer->id)
+            ->setOrganizerName($details->organizer->name)
+            ->setOrganizerLogo($details->organizer->logo)
+            ->setIsOnline($details->isOnline)
+            ->setStructure($details->getPhasesAsArray());
     }
 
     /**
@@ -249,6 +292,7 @@ final readonly class PlayerStatsCollector
             ->setTies($standing->record->ties)
             ->setDeckName($standing->deck?->name)
             ->setDeckId($standing->deck?->id)
+            ->setDeckIcons($standing->deck?->icons)
             ->setDropped($standing->hasDropped());
     }
 }

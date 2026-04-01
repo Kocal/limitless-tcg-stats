@@ -4,8 +4,10 @@ namespace App\Limitless;
 
 use App\Limitless\Dto\PaginatedTournaments;
 use App\Limitless\Dto\Tournament;
+use App\Limitless\Dto\TournamentDetails;
 use App\Limitless\Dto\TournamentStanding;
 use App\Limitless\Exception\LimitlessTcgException;
+use App\Limitless\Exception\RateLimitException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -13,8 +15,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final readonly class LimitlessTcgClient
 {
-    private const int CACHE_TTL_TOURNAMENTS = 300; // 5 minutes
-    private const int CACHE_TTL_STANDINGS = 3600; // 1 hour
+    private const int CACHE_TTL_TOURNAMENTS = 60 * 60 * 24;
+    private const int CACHE_TTL_DETAILS = 60 * 60 * 24 * 30;
+    private const int CACHE_TTL_STANDINGS = 60 * 60 * 24 * 30;
 
     public function __construct(
         private HttpClientInterface $limitlessClient,
@@ -64,6 +67,9 @@ final readonly class LimitlessTcgClient
             ]);
 
             $statusCode = $response->getStatusCode();
+            if (Response::HTTP_TOO_MANY_REQUESTS === $statusCode) {
+                throw RateLimitException::create();
+            }
             if (Response::HTTP_OK !== $statusCode) {
                 throw LimitlessTcgException::fromHttpError($statusCode, $response->getContent(false));
             }
@@ -85,6 +91,42 @@ final readonly class LimitlessTcgClient
     }
 
     /**
+     * Retrieves detailed information about a specific tournament.
+     *
+     * @param string $tournamentId The unique tournament ID
+     *
+     * @throws LimitlessTcgException
+     * @throws RateLimitException
+     */
+    public function getTournamentDetails(string $tournamentId): TournamentDetails
+    {
+        $cacheKey = $this->buildCacheKey('details', ['id' => $tournamentId]);
+
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($tournamentId): TournamentDetails {
+            $item->expiresAfter(self::CACHE_TTL_DETAILS);
+
+            $response = $this->limitlessClient->request('GET', sprintf('tournaments/%s/details', $tournamentId));
+
+            $statusCode = $response->getStatusCode();
+            if (Response::HTTP_TOO_MANY_REQUESTS === $statusCode) {
+                throw RateLimitException::create();
+            }
+            if (Response::HTTP_OK !== $statusCode) {
+                throw LimitlessTcgException::fromHttpError($statusCode, $response->getContent(false));
+            }
+
+            try {
+                /** @var array{id: string, game: string, format?: string|null, name: string, date: string, players: int, organizer: array{id: int, name: string, logo?: string|null}, platform?: string|null, decklists: bool, isPublic: bool, isOnline: bool, phases: list<array{phase: int, type: string, rounds: int, mode: string}>} $data */
+                $data = $response->toArray();
+            } catch (\Throwable $e) {
+                throw LimitlessTcgException::fromDeserializationError($e->getMessage(), $e);
+            }
+
+            return TournamentDetails::fromArray($data);
+        });
+    }
+
+    /**
      * Retrieves the standings for a specific tournament.
      *
      * @param string $tournamentId The unique tournament ID
@@ -92,6 +134,7 @@ final readonly class LimitlessTcgClient
      * @return list<TournamentStanding>
      *
      * @throws LimitlessTcgException
+     * @throws RateLimitException
      */
     public function getTournamentStandings(string $tournamentId): array
     {
@@ -103,6 +146,9 @@ final readonly class LimitlessTcgClient
             $response = $this->limitlessClient->request('GET', sprintf('tournaments/%s/standings', $tournamentId));
 
             $statusCode = $response->getStatusCode();
+            if (Response::HTTP_TOO_MANY_REQUESTS === $statusCode) {
+                throw RateLimitException::create();
+            }
             if (Response::HTTP_OK !== $statusCode) {
                 throw LimitlessTcgException::fromHttpError($statusCode, $response->getContent(false));
             }

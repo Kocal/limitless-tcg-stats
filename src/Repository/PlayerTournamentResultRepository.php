@@ -69,7 +69,7 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
     /**
      * Get statistics summary for a player.
      *
-     * @return array{tournaments: int, total_wins: int, total_losses: int, total_ties: int, best_placing: int|null, avg_placing: float|null}
+     * @return array{tournaments: int, total_wins: int, total_losses: int, total_ties: int, best_placing: int|null, best_placing_players: int|null, avg_placing: float|null}
      */
     public function getPlayerStats(Player $player): array
     {
@@ -87,12 +87,30 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
 
         $result = $qb->getQuery()->getSingleResult();
 
+        // Get the number of players in the tournament with the best placing
+        $bestPlacingPlayers = null;
+        if ($result['best_placing']) {
+            $bestResult = $this->createQueryBuilder('r')
+                ->select('t.playerCount')
+                ->join('r.tournament', 't')
+                ->where('r.player = :player')
+                ->andWhere('r.finalPlacing = :bestPlacing')
+                ->setParameter('player', $player)
+                ->setParameter('bestPlacing', $result['best_placing'])
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getSingleScalarResult();
+
+            $bestPlacingPlayers = $bestResult ? (int) $bestResult : null;
+        }
+
         return [
             'tournaments' => (int) $result['tournaments'],
             'total_wins' => (int) ($result['total_wins'] ?? 0),
             'total_losses' => (int) ($result['total_losses'] ?? 0),
             'total_ties' => (int) ($result['total_ties'] ?? 0),
             'best_placing' => $result['best_placing'] ? (int) $result['best_placing'] : null,
+            'best_placing_players' => $bestPlacingPlayers,
             'avg_placing' => $result['avg_placing'] ? (float) $result['avg_placing'] : null,
         ];
     }

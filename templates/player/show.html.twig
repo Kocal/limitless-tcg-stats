@@ -43,6 +43,9 @@
                         <dd class="col-sm-6">
                             {% if stats.best_placing %}
                                 <span class="badge bg-success fs-6">#{{ stats.best_placing }}</span>
+                                {% if stats.best_placing_players %}
+                                    <small class="text-muted">/ {{ stats.best_placing_players }}</small>
+                                {% endif %}
                             {% else %}
                                 <span class="text-muted">-</span>
                             {% endif %}
@@ -88,7 +91,8 @@
                     <tr>
                         <th>Tournament</th>
                         <th>Date</th>
-                        <th>Game</th>
+                        <th>Format</th>
+                        <th>Organizer</th>
                         <th class="text-center">Placement</th>
                         <th class="text-center">Record</th>
                         <th>Deck</th>
@@ -100,12 +104,37 @@
                         <tr>
                             <td>
                                 <strong>{{ result.tournament.name }}</strong>
-                                {% if result.tournament.format %}
-                                    <br><small class="text-muted">{{ result.tournament.format }}</small>
+                                {% if result.tournament.isOnline is not null %}
+                                    <span class="badge {{ result.tournament.isOnline ? 'bg-info' : 'bg-success' }} ms-1" title="{{ result.tournament.isOnline ? 'Online' : 'In-Person' }}">
+                                        {{ result.tournament.isOnline ? 'Online' : 'IRL' }}
+                                    </span>
+                                {% endif %}
+                                {% if result.tournament.structure %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {% for phase in result.tournament.structure %}
+                                            {{ phase.type }}{% if phase.rounds > 1 %} ({{ phase.rounds }}R){% endif %}{% if phase.mode != 'BO1' %} {{ phase.mode }}{% endif %}{% if not loop.last %} + {% endif %}
+                                        {% endfor %}
+                                    </small>
                                 {% endif %}
                             </td>
                             <td>{{ result.tournament.date|date('Y-m-d') }}</td>
-                            <td><span class="badge bg-secondary">{{ result.tournament.game }}</span></td>
+                            <td>
+                                <span class="badge bg-secondary">{{ result.tournament.game }}</span>
+                                {% if result.tournament.format %}
+                                    <span class="badge bg-primary">{{ result.tournament.format }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if result.tournament.organizerName %}
+                                    {% if result.tournament.organizerLogo %}
+                                        <img src="{{ result.tournament.organizerLogo }}" alt="{{ result.tournament.organizerName }}" class="me-1" style="height: 20px; width: auto;">
+                                    {% endif %}
+                                    <span>{{ result.tournament.organizerName }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
                             <td class="text-center">
                                 {% if result.finalPlacing %}
                                     {% if result.finalPlacing <= 3 %}
@@ -115,6 +144,7 @@
                                     {% else %}
                                         <span class="badge bg-light text-dark">#{{ result.finalPlacing }}</span>
                                     {% endif %}
+                                    <small class="text-muted">/ {{ result.tournament.playerCount }}</small>
                                 {% else %}
                                     <span class="text-muted">-</span>
                                 {% endif %}
@@ -123,6 +153,11 @@
                                 <span class="text-success">{{ result.wins }}</span>-<span class="text-danger">{{ result.losses }}</span>-<span class="text-secondary">{{ result.ties }}</span>
                             </td>
                             <td>
+                                {% if result.deckIcons|length > 0 %}
+                                    {% for url in result.deckIconUrls %}
+                                        <img src="{{ url }}" alt="Pokemon icon" class="me-1" style="height: 24px; width: auto;" loading="lazy">
+                                    {% endfor %}
+                                {% endif %}
                                 {% if result.deckName %}
                                     {{ result.deckName }}
                                 {% else %}

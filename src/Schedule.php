@@ -23,7 +23,7 @@ class Schedule implements ScheduleProviderInterface
             ->stateful($this->cache)
             ->processOnlyLastMissedRun(true)
             ->add(
-                RecurringMessage::every('6 hours', new CollectPlayerStatsMessage())
+                RecurringMessage::every('6 hours', new CollectPlayerStatsMessage(maxTournaments: 50))
             );
     }
 }

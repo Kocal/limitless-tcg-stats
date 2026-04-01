@@ -47,6 +47,12 @@ class PlayerTournamentResult
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $deckId = null;
 
+    /**
+     * @var list<string>|null
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $deckIcons = null;
+
     #[ORM\Column]
     private bool $dropped = false;
 
@@ -150,6 +156,41 @@ class PlayerTournamentResult
         $this->deckId = $deckId;
 
         return $this;
+    }
+
+    /**
+     * Returns the deck icons (maximum 2).
+     *
+     * @return list<string>
+     */
+    public function getDeckIcons(): array
+    {
+        return $this->deckIcons ?? [];
+    }
+
+    /**
+     * Sets the deck icons (keeps only the first 2).
+     *
+     * @param list<string>|null $deckIcons
+     */
+    public function setDeckIcons(?array $deckIcons): static
+    {
+        $this->deckIcons = null !== $deckIcons ? \array_slice($deckIcons, 0, 2) : null;
+
+        return $this;
+    }
+
+    /**
+     * Returns the Smogon minisprite URLs for the deck icons.
+     *
+     * @return list<string>
+     */
+    public function getDeckIconUrls(): array
+    {
+        return array_map(
+            static fn (string $icon): string => \sprintf('https://www.smogon.com/forums/media/minisprites/%s.png', $icon),
+            $this->getDeckIcons(),
+        );
     }
 
     public function isDropped(): bool
