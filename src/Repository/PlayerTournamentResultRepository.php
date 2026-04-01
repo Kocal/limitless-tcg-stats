@@ -50,7 +50,7 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('r')
             ->where('r.tournament = :tournament')
             ->setParameter('tournament', $tournament)
-            ->orderBy('r.placing', 'ASC')
+            ->orderBy('r.finalPlacing', 'ASC')
             ->getQuery()
             ->getResult();
     }
@@ -79,8 +79,8 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
                 'SUM(r.wins) as total_wins',
                 'SUM(r.losses) as total_losses',
                 'SUM(r.ties) as total_ties',
-                'MIN(r.placing) as best_placing',
-                'AVG(r.placing) as avg_placing',
+                'MIN(r.finalPlacing) as best_placing',
+                'AVG(r.finalPlacing) as avg_placing',
             ])
             ->where('r.player = :player')
             ->setParameter('player', $player);

@@ -27,7 +27,7 @@ class PlayerTournamentResult
 
     #[ORM\Column(nullable: true)]
     #[Assert\PositiveOrZero]
-    private ?int $placing = null;
+    private ?int $finalPlacing = null;
 
     #[ORM\Column]
     #[Assert\PositiveOrZero]
@@ -80,14 +80,14 @@ class PlayerTournamentResult
         return $this->tournament;
     }
 
-    public function getPlacing(): ?int
+    public function getFinalPlacing(): ?int
     {
-        return $this->placing;
+        return $this->finalPlacing;
     }
 
-    public function setPlacing(?int $placing): static
+    public function setFinalPlacing(?int $finalPlacing): static
     {
-        $this->placing = $placing;
+        $this->finalPlacing = $finalPlacing;
 
         return $this;
     }

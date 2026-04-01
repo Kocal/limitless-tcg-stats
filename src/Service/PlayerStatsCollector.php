@@ -243,7 +243,7 @@ final readonly class PlayerStatsCollector
 
     private function updateResult(PlayerTournamentResult $result, TournamentStanding $standing): void
     {
-        $result->setPlacing($standing->placing)
+        $result->setFinalPlacing($standing->placing)
             ->setWins($standing->record->wins)
             ->setLosses($standing->record->losses)
             ->setTies($standing->record->ties)

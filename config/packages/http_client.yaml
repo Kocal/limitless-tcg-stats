@@ -5,3 +5,5 @@ framework:
                 base_uri: 'https://play.limitlesstcg.com/api/'
                 headers:
                     Accept: 'application/json'
+                retry_failed:
+                    max_retries: 5

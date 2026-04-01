@@ -121,6 +121,7 @@ final class CollectPlayerStatsCommand extends Command
             $progressBar->finish();
             $io->newLine(2);
             $io->error(\sprintf('Failed to collect stats: %s', $e->getMessage()));
+            $this->getApplication()->renderThrowable($e, $io);
 
             return Command::FAILURE;
         }
