@@ -11,20 +11,6 @@
             ".php-cs-fixer.dist.php"
         ]
     },
-    "kocal/oxc-bundle": {
-        "version": "1.0",
-        "recipe": {
-            "repo": "github.com/symfony/recipes-contrib",
-            "branch": "main",
-            "version": "1.0",
-            "ref": "4a5a3ebd063e17d018d6399e59131d568e8c114f"
-        },
-        "files": [
-            ".oxfmtrc.json",
-            ".oxlintrc.json",
-            "config/packages/kocal_oxc.yaml"
-        ]
-    },
     "symfony/console": {
         "version": "8.0",
         "recipe": {

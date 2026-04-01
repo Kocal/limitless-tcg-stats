@@ -11,8 +11,3 @@
 /.php-cs-fixer.php
 /.php-cs-fixer.cache
 ###< friendsofphp/php-cs-fixer ###
-
-###> kocal/oxc-bundle ###
-/bin/oxfmt*
-/bin/oxlint*
-###< kocal/oxc-bundle ###

@@ -67,25 +67,3 @@ cc: sf
 php-cs-fixer: ## Run PHP CS Fixer, pass the parameter "c=" to run a given command, example: make php-cs-fixer c='fix src --dry-run'
 	@$(eval c ?=)
 	@$(PHP) vendor/bin/php-cs-fixer $(c)
-
-oxfmt: ## Run oxfmt
-oxfmt: oxfmt.download
-	@$(PHP_CONT) ./bin/oxfmt .
-
-oxfmt.check: ## Run oxfmt in check mode
-oxfmt.check: oxfmt.download
-	@$(PHP_CONT) ./bin/oxfmt . --check
-
-oxlint: ## Run oxlint
-oxlint: oxlint.download
-	@$(PHP_CONT) ./bin/oxlint .
-
-oxlint.fix: ## Run oxlint in fix mode
-oxlint.fix: oxlint.download
-	@$(PHP_CONT) ./bin/oxlint . --fix
-
-oxfmt.download: ## Download oxfmt
-	@$(SYMFONY) oxc:download:oxfmt
-
-oxlint.download: ## Download oxlint
-	@$(SYMFONY) oxc:download:oxlint

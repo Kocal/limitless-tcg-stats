@@ -104,10 +104,4 @@ jobs:
         run: make up
 
       - name: Run PHP-CS-Fixer
-        run: make php-cs-fixer
-
-      - name: Run oxfmt
-        run: make oxfmt.check
-
-      - name: Run oxlint
-        run: make oxlint
+        run: make php-cs-fixer c='fix --dry-run --diff'
