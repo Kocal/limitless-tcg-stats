@@ -2,7 +2,7 @@ UID = $(shell id -u)
 GID = $(shell id -g)
 
 # Executables (local)
-DOCKER_COMP = USER=$(UID) GID=$(GID) docker compose
+DOCKER_COMP = UID=$(UID) GID=$(GID) docker compose
 
 # Docker containers
 PHP_CONT = $(DOCKER_COMP) exec php
@@ -29,6 +29,9 @@ up: ## Start the docker hub in detached mode (no logs)
 
 start: build up ## Build and start the containers
 
+stop: ## Stop the docker hub without removing containers
+	$(DOCKER_COMP) stop
+
 down: ## Stop the docker hub
 	@$(DOCKER_COMP) down --remove-orphans
 
@@ -39,7 +42,7 @@ sh: ## Connect to the FrankenPHP container
 	@$(PHP_CONT) sh
 
 bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
-	@$(PHP_CONT) bash
+	$(PHP_CONT) bash
 
 test: ## Start tests with phpunit, pass the parameter "c=" to add options to phpunit, example: make test c="--group e2e --stop-on-failure"
 	@$(eval c ?=)

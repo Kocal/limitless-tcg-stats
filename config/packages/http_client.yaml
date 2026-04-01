@@ -1,0 +1,7 @@
+framework:
+    http_client:
+        scoped_clients:
+            limitless.client:
+                base_uri: 'https://play.limitlesstcg.com/api/'
+                headers:
+                    Accept: 'application/json'
