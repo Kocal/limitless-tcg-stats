@@ -105,4 +105,19 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * Find most recent results across all players.
+     *
+     * @return PlayerTournamentResult[]
+     */
+    public function findRecentResults(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('r')
+            ->join('r.tournament', 't')
+            ->orderBy('t.date', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

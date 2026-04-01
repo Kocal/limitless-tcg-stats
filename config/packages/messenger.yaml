@@ -1,0 +1,20 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            async: 'doctrine://default?queue_name=messages'
+            failed: 'doctrine://default?queue_name=failed'
+            scheduler_default: 'sync://'
+
+        routing:
+            # Route your messages to the transports
+            'App\Scheduler\Message\CollectPlayerStatsMessage': async
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'
+                scheduler_default: 'in-memory://'
