@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="px-4 py-5 my-5 text-center">
+    <h1 class="display-5 fw-bold">Limitless TCG Stats</h1>
+    <div class="col-lg-6 mx-auto">
+        <p class="lead mb-4">
+            Track tournament results and statistics for Pokemon TCG players.
+            Data collected automatically from the Limitless TCG API.
+        </p>
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <a href="{{ path('player_index') }}" class="btn btn-primary btn-lg px-4 gap-3">View Players</a>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+    <div class="col">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h2 class="card-title display-4">{{ playerCount }}</h2>
+                <p class="card-text text-muted">Players Tracked</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h2 class="card-title display-4">{{ tournamentCount }}</h2>
+                <p class="card-text text-muted">Tournaments</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h2 class="card-title display-4">{{ resultCount }}</h2>
+                <p class="card-text text-muted">Results Recorded</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if recentResults|length > 0 %}
+<h2 class="mb-3">Recent Results</h2>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Tournament</th>
+                <th>Date</th>
+                <th>Placing</th>
+                <th>Record</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in recentResults %}
+            <tr>
+                <td>
+                    <a href="{{ path('player_show', {id: result.player.id}) }}">
+                        {{ result.player.name }}
+                    </a>
+                </td>
+                <td>{{ result.tournament.name }}</td>
+                <td>{{ result.tournament.date|date('M j, Y') }}</td>
+                <td>
+                    {% if result.finalPlacing <= 3 %}
+                        <span class="badge bg-{{ result.finalPlacing == 1 ? 'warning text-dark' : (result.finalPlacing == 2 ? 'secondary' : 'danger') }}">
+                            #{{ result.finalPlacing }}
+                        </span>
+                    {% else %}
+                        #{{ result.finalPlacing }}
+                    {% endif %}
+                </td>
+                <td>{{ result.wins }}-{{ result.losses }}{% if result.ties > 0 %}-{{ result.ties }}{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
