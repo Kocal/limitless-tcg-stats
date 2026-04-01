@@ -2,7 +2,7 @@
 
 namespace App\Limitless\Exception;
 
-final class LimitlessTcgException extends \RuntimeException
+class LimitlessTcgException extends \RuntimeException
 {
     public static function fromHttpError(int $statusCode, string $message = ''): self
     {

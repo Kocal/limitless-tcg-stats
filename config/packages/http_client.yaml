@@ -7,3 +7,6 @@ framework:
                     Accept: 'application/json'
                 retry_failed:
                     max_retries: 5
+                    delay: 1500
+                    multiplier: 3
+                    max_delay: 30000

@@ -41,6 +41,24 @@ class Tournament
     #[Assert\PositiveOrZero]
     private int $playerCount = 0;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $organizerId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $organizerName = null;
+
+    #[ORM\Column(length: 512, nullable: true)]
+    private ?string $organizerLogo = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $isOnline = null;
+
+    /**
+     * @var list<array{phase: int, type: string, rounds: int, mode: string}>|null
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $structure = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -133,6 +151,72 @@ class Tournament
         return $this;
     }
 
+    public function getOrganizerId(): ?int
+    {
+        return $this->organizerId;
+    }
+
+    public function setOrganizerId(?int $organizerId): static
+    {
+        $this->organizerId = $organizerId;
+
+        return $this;
+    }
+
+    public function getOrganizerName(): ?string
+    {
+        return $this->organizerName;
+    }
+
+    public function setOrganizerName(?string $organizerName): static
+    {
+        $this->organizerName = $organizerName;
+
+        return $this;
+    }
+
+    public function getOrganizerLogo(): ?string
+    {
+        return $this->organizerLogo;
+    }
+
+    public function setOrganizerLogo(?string $organizerLogo): static
+    {
+        $this->organizerLogo = $organizerLogo;
+
+        return $this;
+    }
+
+    public function isOnline(): ?bool
+    {
+        return $this->isOnline;
+    }
+
+    public function setIsOnline(?bool $isOnline): static
+    {
+        $this->isOnline = $isOnline;
+
+        return $this;
+    }
+
+    /**
+     * @return list<array{phase: int, type: string, rounds: int, mode: string}>|null
+     */
+    public function getStructure(): ?array
+    {
+        return $this->structure;
+    }
+
+    /**
+     * @param list<array{phase: int, type: string, rounds: int, mode: string}>|null $structure
+     */
+    public function setStructure(?array $structure): static
+    {
+        $this->structure = $structure;
+
+        return $this;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
@@ -147,5 +231,13 @@ class Tournament
     public function setUpdatedAtValue(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * Checks if the tournament has organizer details populated.
+     */
+    public function hasOrganizerDetails(): bool
+    {
+        return null !== $this->organizerId;
     }
 }
