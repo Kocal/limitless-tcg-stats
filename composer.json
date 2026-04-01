@@ -9,6 +9,9 @@
         "php": ">=8.5.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "doctrine/doctrine-bundle": "^3.2",
+        "doctrine/doctrine-migrations-bundle": "^4.0",
+        "doctrine/orm": "^3.6",
         "predis/predis": "^3.4",
         "symfony/console": "8.0.*",
         "symfony/dotenv": "8.0.*",
@@ -16,6 +19,7 @@
         "symfony/framework-bundle": "8.0.*",
         "symfony/http-client": "8.0.*",
         "symfony/runtime": "8.0.*",
+        "symfony/uid": "8.0.*",
         "symfony/yaml": "8.0.*"
     },
     "config": {
