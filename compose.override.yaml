@@ -24,22 +24,6 @@ services:
       # Ensure that host.docker.internal is correctly defined on Linux
       - host.docker.internal:host-gateway
     tty: true
-
-  worker:
-    image: ${IMAGES_PREFIX:-}app-php-dev
-    build:
-      context: .
-      target: frankenphp_dev
-    volumes:
-      - ./:/app
-    environment:
-      XDEBUG_MODE: "off"
-      APP_ENV: "${APP_ENV:-dev}"
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    tty: true
-    healthcheck:
-      disable: true
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
 
