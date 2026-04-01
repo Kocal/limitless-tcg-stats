@@ -1,4 +1,30 @@
 {
+    "friendsofphp/php-cs-fixer": {
+        "version": "3.94",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "3.39",
+            "ref": "97aaf9026490db73b86c23d49e5774bc89d2b232"
+        },
+        "files": [
+            ".php-cs-fixer.dist.php"
+        ]
+    },
+    "kocal/oxc-bundle": {
+        "version": "1.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.0",
+            "ref": "4a5a3ebd063e17d018d6399e59131d568e8c114f"
+        },
+        "files": [
+            ".oxfmtrc.json",
+            ".oxlintrc.json",
+            "config/packages/kocal_oxc.yaml"
+        ]
+    },
     "symfony/console": {
         "version": "8.0",
         "recipe": {

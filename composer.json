@@ -68,5 +68,9 @@
             "require": "8.0.*",
             "docker": true
         }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.94",
+        "kocal/oxc-bundle": "^1.0"
     }
 }
