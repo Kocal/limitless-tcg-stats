@@ -1,72 +1,130 @@
-UID = $(shell id -u)
-GID = $(shell id -g)
+ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+include $(ROOT_DIR)/tools/make/text.mk
+include $(ROOT_DIR)/tools/make/help.mk
+include $(ROOT_DIR)/tools/make/os.mk
+include $(ROOT_DIR)/tools/make/git.mk
 
-# Executables (local)
-DOCKER_COMP = UID=$(UID) GID=$(GID) docker compose
-
-# Docker containers
-PHP_CONT = $(DOCKER_COMP) exec php
+.DEFAULT_GOAL := help
 
 # Executables
-PHP      = $(PHP_CONT) php
-COMPOSER = $(PHP_CONT) composer
-SYMFONY  = $(PHP) bin/console
+SF := symfony
+SF_PROXY = $(shell $(SF) local:proxy:url)
+SF_CONSOLE := $(SF) console
+PHP := $(SF) php
+COMPOSER := $(SF) composer
 
-# Misc
-.DEFAULT_GOAL = help
-.PHONY        : help build up start down logs sh composer vendor sf cc test
+USER := $(shell id -u)
+GROUP := $(shell id -g)
+DC := USER_ID=$(USER) GROUP_ID=$(GROUP) $(shell docker compose --env-file /dev/null > /dev/null 2>&1 && echo 'docker compose --env-file /dev/null' || echo 'docker-compose --env-file /dev/null')
 
-## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
-help: ## Outputs this help screen
-	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
+## Install everything needed to start the project
+install:
+	$(SF) local:server:ca:install
+	$(MAKE) start
+	$(MAKE) app.install
 
-## —— Docker 🐳 ————————————————————————————————————————————————————————————————
-build: ## Builds the Docker images
-	@$(DOCKER_COMP) build --pull --no-cache
+## Start the environment
+start:
+	$(DC) up -d
+	$(SF) proxy:start
+	$(SF) serve --open
 
-up: ## Start the docker hub in detached mode (no logs)
-	@$(DOCKER_COMP) up --wait --detach
+## Stop the environment
+stop:
+	$(DC) kill
 
-start: build up ## Build and start the containers
+## Stop and delete the environment and project data (database, logs, etc.)
+delete:
+	$(DC) down -v --remove-orphans
 
-stop: ## Stop the docker hub without removing containers
-	$(DOCKER_COMP) stop
+## App - Install the application
+app.install:
+	@$(call action, Installing PHP dependencies...)
+	$(COMPOSER) install --prefer-dist
 
-down: ## Stop the docker hub
-	@$(DOCKER_COMP) down --remove-orphans
+	@$(call action, Running DB migrations...)
+	$(SF_CONSOLE) doctrine:migrations:migrate --no-interaction --all-or-nothing
 
-logs: ## Show live logs
-	@$(DOCKER_COMP) logs --tail=0 --follow
+## App - Install the application (alias to "make app.install")
+app.update: app.install
 
-sh: ## Connect to the FrankenPHP container
-	@$(PHP_CONT) sh
+######
+# QA #
+######
 
-bash: ## Connect to the FrankenPHP container via bash so up and down arrows go to previous commands
-	$(PHP_CONT) bash
+## QA - Run all QA checks
+qa: cs lint test
 
-test: ## Start tests with phpunit, pass the parameter "c=" to add options to phpunit, example: make test c="--group e2e --stop-on-failure"
-	@$(eval c ?=)
-	@$(DOCKER_COMP) exec -e APP_ENV=test php bin/phpunit $(c)
+## QA - Run all QA checks and fix issues
+qa.fix: cs.fix lint.fix test
 
+################
+# Coding style #
+################
 
-## —— Composer 🧙 ——————————————————————————————————————————————————————————————
-composer: ## Run composer, pass the parameter "c=" to run a given command, example: make composer c='req symfony/orm-pack'
-	@$(eval c ?=)
-	@$(COMPOSER) $(c)
+## Coding style - Run all coding style checks
+cs: cs.back cs.front
 
-vendor: ## Install vendors according to the current composer.lock file
-vendor: c=install --prefer-dist --no-dev --no-progress --no-scripts --no-interaction
-vendor: composer
+## Coding style - Run all coding style checks and fix issues
+cs.fix: cs.back.fix cs.front.fix
 
-## —— Symfony 🎵 ———————————————————————————————————————————————————————————————
-sf: ## List all Symfony commands or pass the parameter "c=" to run a given command, example: make sf c=about
-	@$(eval c ?=)
-	@$(SYMFONY) $(c)
+## Coding style - Check backend coding style
+cs.back:
+	$(PHP) vendor/bin/php-cs-fixer fix --diff
+	$(PHP) vendor/bin/twig-cs-fixer
 
-cc: c=c:c ## Clear the cache
-cc: sf
+## Coding style - Check backend coding style and fix issues
+cs.back.fix:
+	$(PHP) vendor/bin/php-cs-fixer fix --dry-run --diff
+	$(PHP) vendor/bin/twig-cs-fixer --fix
 
-## —— ✨ Linting & Formatting 🧹 —————————————————————————————————————————————————————————————
-php-cs-fixer: ## Run PHP CS Fixer, pass the parameter "c=" to run a given command, example: make php-cs-fixer c='fix src --dry-run'
-	@$(eval c ?=)
-	@$(PHP) vendor/bin/php-cs-fixer $(c)
+## Coding style - Check frontend coding style
+cs.front:
+	echo "Not implemented!"
+
+## Coding style - Check frontend coding style and fix issues
+cs.front.fix:
+	echo "Not implemented!"
+
+##########
+# Linter #
+##########
+
+## Linter - Run all linters
+lint: lint.back lint.front
+
+## Linter - Run all linters and fix issues
+lint.fix: lint.back lint.front.fix
+
+## Linter - Run linters for backend
+lint.back:
+	$(SF_CONSOLE) lint:container
+	$(SF_CONSOLE) lint:xliff translations
+	$(SF_CONSOLE) lint:yaml --parse-tags config
+	$(SF_CONSOLE) lint:twig templates
+	#$(SF_CONSOLE) doctrine:schema:validate
+
+## Linter - Lint front files
+lint.front:
+	echo "Not implemented!
+
+## Linter - Lint front files and fix issues
+lint.front.fix:
+	echo "Not implemented!"
+
+#########
+# Tests #
+#########
+
+## Tests - Run all tests
+test: test.back
+
+## Tests - Run backend tests
+test.back:
+	$(PHP) vendor/bin/phpunit
+## Tests - Run backend tests with coverage
+
+test.back.coverage:
+	$(PHP) vendor/bin/phpunit --coverage-html .cache/phpunit/coverage-html
+
+-include $(ROOT_DIR)/Makefile.local

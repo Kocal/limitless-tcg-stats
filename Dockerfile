@@ -53,38 +53,39 @@ ENTRYPOINT ["docker-entrypoint"]
 HEALTHCHECK --start-period=60s CMD php -r 'exit(false === @file_get_contents("http://localhost:2019/metrics", context: stream_context_create(["http" => ["timeout" => 5]])) ? 1 : 0);'
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile" ]
 
+# TODO: We use Symfony CLI and local PHP for development, but I may be reconsidering this approach in the future
 # Dev FrankenPHP image
-FROM frankenphp_base AS frankenphp_dev
-
-ENV APP_ENV=dev
-ENV XDEBUG_MODE=off
-ENV FRANKENPHP_WORKER_CONFIG=watch
-
+#FROM frankenphp_base AS frankenphp_dev
+#
+#ENV APP_ENV=dev
+#ENV XDEBUG_MODE=off
+#ENV FRANKENPHP_WORKER_CONFIG=watch
+#
 # dev dependencies
 # hadolint ignore=DL3008
-RUN <<-EOF
-	mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
-	apt-get update
-	apt-get install -y --no-install-recommends \
-		aggregate \
-		curl \
-		dnsmasq \
-		dnsutils \
-		iproute2 \
-		ipset \
-		iptables \
-		jq \
-		sudo
-	install-php-extensions xdebug
-	rm -rf /var/lib/apt/lists/*
-	useradd -m -s /bin/bash nonroot
-	echo "nonroot ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/nonroot
-	git config --system --add safe.directory /app
-EOF
-
-COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
-
-CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
+#RUN <<-EOF
+#	mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+#	apt-get update
+#	apt-get install -y --no-install-recommends \
+#		aggregate \
+#		curl \
+#		dnsmasq \
+#		dnsutils \
+#		iproute2 \
+#		ipset \
+#		iptables \
+#		jq \
+#		sudo
+#	install-php-extensions xdebug
+#	rm -rf /var/lib/apt/lists/*
+#	useradd -m -s /bin/bash nonroot
+#	echo "nonroot ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/nonroot
+#	git config --system --add safe.directory /app
+#EOF
+#
+#COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
+#
+#CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
 # Builder for the prod FrankenPHP image
 FROM frankenphp_base AS frankenphp_prod_builder
@@ -174,6 +175,8 @@ VOLUME /app/var/
 USER www-data
 
 WORKDIR /app
+
+EXPOSE 80 443 2019
 
 ENTRYPOINT ["docker-entrypoint"]
 

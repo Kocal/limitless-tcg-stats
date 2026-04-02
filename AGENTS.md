@@ -11,7 +11,6 @@ Generated using [Symfony Docker](https://github.com/dunglas/symfony-docker).
 - **Framework:** Symfony 8.0
 - **PHP Version:** 8.5+
 - **Web Server:** FrankenPHP (Caddy)
-- **Real-time:** Mercure
 - **API Preloading:** Vulcain
 - **Container:** Docker with multi-stage builds
 

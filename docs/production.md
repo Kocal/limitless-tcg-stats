@@ -86,13 +86,11 @@ docker compose -f compose.yaml -f compose.prod.yaml build --pull --no-cache
 # Start container
 SERVER_NAME=your-domain-name.example.com \
 APP_SECRET=ChangeMe \
-CADDY_MERCURE_JWT_SECRET=ChangeThisMercureHubJWTSecretKey \
 docker compose -f compose.yaml -f compose.prod.yaml up --wait
 ```
 
 Be sure to replace `your-domain-name.example.com` with your actual domain name
-and to set the values of `APP_SECRET`, `CADDY_MERCURE_JWT_SECRET`
-to cryptographically secure random values.
+and to set the values of `APP_SECRET to cryptographically secure random values.
 
 Your server is up and running, and a HTTPS certificate has been automatically
 generated for you.
@@ -112,7 +110,6 @@ run the following command:
 ```console
 SERVER_NAME=:80 \
 APP_SECRET=ChangeMe \
-CADDY_MERCURE_JWT_SECRET=ChangeThisMercureHubJWTSecretKey \
 docker compose -f compose.yaml -f compose.prod.yaml up --wait
 ```
 
