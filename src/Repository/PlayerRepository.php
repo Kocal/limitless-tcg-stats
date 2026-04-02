@@ -29,6 +29,23 @@ class PlayerRepository extends ServiceEntityRepository
     }
 
     /**
+     * Find all players with at least a minimum number of tournaments.
+     *
+     * @return Player[]
+     */
+    public function findAllWithMinimumTournaments(int $minimumTournaments = 3): array
+    {
+        return $this->createQueryBuilder('p')
+            ->leftJoin('App\Entity\PlayerTournamentResult', 'r', 'WITH', 'r.player = p')
+            ->groupBy('p.id')
+            ->having('COUNT(r.id) >= :minimumTournaments')
+            ->setParameter('minimumTournaments', $minimumTournaments)
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Find players whose name contains the given search string (case-insensitive).
      *
      * @return Player[]
