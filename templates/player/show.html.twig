@@ -103,7 +103,11 @@
                     {% for result in results %}
                         <tr>
                             <td>
-                                <strong>{{ result.tournament.name }}</strong>
+                                <strong>
+                                    <a href="https://play.limitlesstcg.com/tournament/{{ result.tournament.externalId }}/details">
+                                        {{ result.tournament.name }}
+                                    </a>
+                                </strong>
                                 {% if result.tournament.isOnline is not null %}
                                     <span class="badge {{ result.tournament.isOnline ? 'bg-info' : 'bg-success' }} ms-1" title="{{ result.tournament.isOnline ? 'Online' : 'In-Person' }}">
                                         {{ result.tournament.isOnline ? 'Online' : 'IRL' }}
