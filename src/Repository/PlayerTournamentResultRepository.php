@@ -139,7 +139,7 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
                 ->add($qb->expr()->isNull($tournamentAlias . '.format'))
                 ->add($qb->expr()->notIn($tournamentAlias . '.format', ':excludedFormats'))
             )
-            ->setParameter('excludedFormats', ['CUSTOM', 'NO EX'])
+            ->setParameter('excludedFormats', ['CUSTOM', 'NOEX', 'NO EX'])
         ;
     }
 }
