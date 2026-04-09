@@ -7,6 +7,8 @@ use App\Entity\PlayerTournamentResult;
 use App\Entity\Tournament;
 use App\ValueObject\PlayerTournamentResultId;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -31,28 +33,15 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
      */
     public function findByPlayer(Player $player): array
     {
-        return $this->createQueryBuilder('r')
+        $qb = $this->createQueryBuilder('r')
             ->join('r.tournament', 't')
             ->where('r.player = :player')
             ->setParameter('player', $player)
-            ->orderBy('t.date', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
+            ->orderBy('t.date', 'DESC');
 
-    /**
-     * Find all results for a tournament, ordered by placing.
-     *
-     * @return PlayerTournamentResult[]
-     */
-    public function findByTournament(Tournament $tournament): array
-    {
-        return $this->createQueryBuilder('r')
-            ->where('r.tournament = :tournament')
-            ->setParameter('tournament', $tournament)
-            ->orderBy('r.finalPlacing', 'ASC')
-            ->getQuery()
-            ->getResult();
+        self::applyBaseFilters($qb, 't');
+
+        return $qb->getQuery()->getResult();
     }
 
     /**
@@ -131,11 +120,26 @@ class PlayerTournamentResultRepository extends ServiceEntityRepository
      */
     public function findRecentResults(int $limit = 5): array
     {
-        return $this->createQueryBuilder('r')
+        $qb = $this->createQueryBuilder('r')
             ->join('r.tournament', 't')
             ->orderBy('t.date', 'DESC')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+            ->setMaxResults($limit);
+
+        self::applyBaseFilters($qb, 't');
+
+        return $qb->getQuery()->getResult();
+    }
+
+    private static function applyBaseFilters(QueryBuilder $qb, string $tournamentAlias): void
+    {
+        $qb
+            ->andWhere($qb->expr()->gte($tournamentAlias . '.playerCount', ':minPlayers'))
+            ->setParameter('minPlayers', 64)
+            ->andWhere($qb->expr()->orX()
+                ->add($qb->expr()->isNull($tournamentAlias . '.format'))
+                ->add($qb->expr()->notIn($tournamentAlias . '.format', ':excludedFormats'))
+            )
+            ->setParameter('excludedFormats', ['CUSTOM', 'NO EX'])
+        ;
     }
 }
