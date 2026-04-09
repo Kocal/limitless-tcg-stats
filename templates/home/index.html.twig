@@ -91,12 +91,11 @@
                 <td>{{ result.wins }}-{{ result.losses }}{% if result.ties > 0 %}-{{ result.ties }}{% endif %}</td>
                 <td>
                     {% if result.deckIcons|length > 0 %}
-                        {% for url in result.deckIconUrls %}
-                            <img src="{{ url }}" alt="Pokemon icon" style="height: 20px; width: auto;" loading="lazy">
-                        {% endfor %}
-                    {% endif %}
-                    {% if result.deckName %}
-                        <span class="ms-1">{{ result.deckName }}</span>
+                        <a href="https://play.limitlesstcg.com/tournament/{{ result.tournament.externalId }}/player/{{ result.player.externalId }}/decklist" target="_blank" rel="noopener" title="{{ result.deckName ?? 'Decklist' }}">
+                            {% for url in result.deckIconUrls -%}
+                                <img src="{{ url }}" alt="Pokemon icon" loading="lazy">
+                            {%- endfor %}
+                        </a>
                     {% endif %}
                 </td>
             </tr>
